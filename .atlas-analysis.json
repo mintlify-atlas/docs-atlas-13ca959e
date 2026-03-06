@@ -1,0 +1,54 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "CVE-2023-27372 SPIP RCE Exploit",
+  "projectDescription": "Proof-of-concept exploit for unauthenticated remote code execution in SPIP before 4.2.1 via PHP object injection.",
+  "theme": "aspen",
+  "primaryColor": "#040404",
+  "lightColor": "#7c8484",
+  "darkColor": "#c7c8c9",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Overview",
+        "pages": [
+          "introduction",
+          "vulnerability-details"
+        ]
+      },
+      {
+        "group": "Getting Started",
+        "pages": [
+          "installation",
+          "usage"
+        ]
+      },
+      {
+        "group": "Technical Reference",
+        "pages": [
+          "how-it-works",
+          "code-reference"
+        ]
+      },
+      {
+        "group": "Additional Resources",
+        "pages": [
+          "affected-versions",
+          "references"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Unauthenticated remote code execution exploit",
+    "Interactive command shell with CSRF token handling",
+    "Automatic vulnerability detection",
+    "PHP object injection via serialized payload",
+    "Command output extraction from reflected response"
+  ],
+  "publicApiSurface": [
+    "get_csrf_token(url) - Fetch anti-CSRF token from password reset form",
+    "run_command(url, csrf_token, command) - Execute command via serialized payload",
+    "interactive_shell(url) - Start interactive command shell",
+    "main() - CLI entry point with argparse"
+  ]
+}
