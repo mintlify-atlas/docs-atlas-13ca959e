@@ -1,0 +1,116 @@
+---
+title: References
+description: External resources, CVE listings, and credits for CVE-2023-27372
+---
+
+## Official CVE Information
+
+<CardGroup cols={1}>
+  <Card 
+    title="CVE-2023-27372 - NVD" 
+    icon="database"
+    href="https://nvd.nist.gov/vuln/detail/CVE-2023-27372"
+  >
+    Official CVE entry in the National Vulnerability Database with CVSS scoring, affected versions, and vendor information.
+  </Card>
+</CardGroup>
+
+## Proof of Concept & Research
+
+<CardGroup cols={1}>
+  <Card 
+    title="Original PoC by nuts7" 
+    icon="github"
+    href="https://github.com/nuts7/CVE-2023-27372"
+  >
+    The original proof-of-concept exploit demonstrating the PHP object injection vulnerability in SPIP's password reset functionality.
+  </Card>
+  
+  <Card 
+    title="SPIP Release Notes" 
+    icon="newspaper"
+    href="https://blog.spip.net/"
+  >
+    Official SPIP blog with security announcements and release notes for patched versions.
+  </Card>
+</CardGroup>
+
+## Technical Details
+
+The vulnerability is documented in the source code with the following key information:
+
+<Info>
+  **CVE ID:** CVE-2023-27372  
+  **Vulnerability Type:** Unauthenticated Remote Code Execution via PHP Object Injection  
+  **Attack Vector:** The `oubli` parameter in `/spip.php?page=spip_pass` (password reset form)  
+  **Root Cause:** Mishandled deserialization of user-supplied serialized data
+</Info>
+
+### Exploitation Mechanism
+
+From the source code analysis:
+
+1. The vulnerability exploits improper deserialization in the `oubli` parameter
+2. A serialized PHP payload is injected into the password reset form
+3. The payload is executed server-side as the web user
+4. Command output is reflected back in the response inside the `oubli` input field value
+
+```python
+# Example payload structure from source code
+payload = f's:{20 + len(command)}:"<?php system(\'{command}\'); ?>";'
+```
+
+The exploit extracts output using regex pattern matching:
+
+```python
+match = re.search(r'value="s:\d+:"(.*?)";"\s', r.text, re.DOTALL)
+```
+
+## Credits
+
+### Discovery & Original Exploit
+
+**[nuts7](https://github.com/nuts7)**
+- Discovered the CVE-2023-27372 vulnerability
+- Developed the original proof-of-concept exploit
+- Published initial research and demonstration code
+
+### Implementation & Enhancement
+
+**[Esteban Zárate](https://github.com/estebanzarate)**
+- Code cleanup and refactoring
+- Interactive shell implementation with command history
+- Improved output extraction and error handling
+- Enhanced user experience with `prompt_toolkit` integration
+
+<Info>
+  This documentation and exploit code represents a collaborative effort to demonstrate the vulnerability for educational and defensive security purposes.
+</Info>
+
+## Additional Reading
+
+### Understanding the Vulnerability
+
+- **PHP Object Injection:** The core vulnerability type that allows arbitrary code execution through deserialization
+- **CSRF Tokens:** The exploit must fetch and use anti-CSRF tokens for each request
+- **Serialization Formats:** PHP's `serialize()` format and how it's exploited
+
+### Related SPIP Security Issues
+
+SPIP has had previous security vulnerabilities. Check the [official SPIP security advisories](https://blog.spip.net/) for a complete history.
+
+<Warning>
+  Always keep SPIP installations updated to the latest stable version to protect against known vulnerabilities.
+</Warning>
+
+## Responsible Disclosure
+
+This vulnerability was responsibly disclosed to the SPIP development team, resulting in patches being released across all affected version branches. The proof-of-concept code is provided for:
+
+- Security research and education
+- Penetration testing in authorized environments
+- Vulnerability assessment and remediation validation
+
+<Warning>
+  Unauthorized access to computer systems is illegal. This exploit should only be used in authorized security assessments or in controlled lab environments.
+</Warning>

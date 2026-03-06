@@ -1,97 +1,75 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "CVE-2023-27372 SPIP RCE Exploit"
+description: "Proof-of-concept exploit for unauthenticated remote code execution in SPIP before 4.2.1 via PHP object injection"
 ---
 
-## Setting up
+<Note>
+This is a proof-of-concept exploit for educational and security research purposes only. Use responsibly and only on systems you have explicit permission to test.
+</Note>
 
-Get your documentation site up and running in minutes.
+## Overview
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+CVE-2023-27372 is an unauthenticated remote code execution vulnerability in SPIP versions before 4.2.1. The vulnerability exists in the password reset form where the `oubli` parameter is susceptible to PHP object injection due to improper deserialization handling.
 
-## Make it yours
+This exploit provides an interactive shell that:
+- Automatically fetches and refreshes anti-CSRF tokens
+- Detects vulnerable SPIP installations
+- Executes arbitrary commands as the web server user
+- Extracts command output from reflected responses
 
-Design a docs site that looks great and empowers your users.
+## Quick Start
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+Get up and running with the exploit in minutes.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Python dependencies and set up the exploit
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Usage Guide" icon="terminal" href="/usage">
+    Learn how to run the exploit against target systems
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Key Features
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Unauthenticated RCE" icon="shield-xmark" href="/vulnerability-details">
+    Exploit SPIP without any authentication required
+  </Card>
+  <Card title="Interactive Shell" icon="window-terminal" href="/usage">
+    Command execution with automatic CSRF token handling
+  </Card>
+  <Card title="Auto-Detection" icon="magnifying-glass" href="/how-it-works">
+    Automatically verify if target is vulnerable
+  </Card>
+  <Card title="Output Extraction" icon="code" href="/how-it-works">
+    Extract command results from reflected responses
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Technical Details
 
-## Need inspiration?
+Learn how the exploit works under the hood.
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="How It Works" icon="gears" href="/how-it-works">
+    Understand the exploitation technique and payload construction
+  </Card>
+  <Card title="Code Reference" icon="book-code" href="/code-reference">
+    Explore the exploit's implementation and functions
+  </Card>
+  <Card title="Affected Versions" icon="bug" href="/affected-versions">
+    View SPIP versions vulnerable to CVE-2023-27372
+  </Card>
+  <Card title="References" icon="link" href="/references">
+    Additional resources and disclosure information
+  </Card>
+</CardGroup>
+
+## About This Vulnerability
+
+<Warning>
+SPIP versions before 3.2.18, 4.0.10, 4.1.8, and 4.2.1 are vulnerable to this attack. Ensure your SPIP installation is updated to a patched version.
+</Warning>
+
+The vulnerability was discovered and originally exploited by [nuts7](https://github.com/nuts7), with improvements and an interactive shell implementation by [Esteban Zárate](https://github.com/estebanzarate).

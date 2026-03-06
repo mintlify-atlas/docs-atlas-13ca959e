@@ -1,0 +1,120 @@
+---
+title: Installation
+description: Set up the CVE-2023-27372 SPIP RCE exploit on your system
+---
+
+## System Requirements
+
+Before installing the exploit, ensure your system meets the following requirements:
+
+- **Python 3** (Python 3.6 or higher recommended)
+- **pip** (Python package manager)
+- Internet connection for downloading dependencies
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone or Download the Exploit">
+    Download the exploit files to your local system. You'll need:
+    - `CVE-2023-27372.py` - The main exploit script
+    - `README.md` - Documentation and usage examples
+  </Step>
+
+  <Step title="Create a Virtual Environment">
+    It's recommended to use a Python virtual environment to isolate dependencies:
+
+    ```bash
+    python3 -m venv venv
+    ```
+
+    This creates a new virtual environment in the `venv` directory.
+  </Step>
+
+  <Step title="Activate the Virtual Environment">
+    Activate the virtual environment based on your operating system:
+
+    <CodeGroup>
+    ```bash Linux/macOS
+    source venv/bin/activate
+    ```
+
+    ```bash Windows (Command Prompt)
+    venv\Scripts\activate.bat
+    ```
+
+    ```bash Windows (PowerShell)
+    venv\Scripts\Activate.ps1
+    ```
+    </CodeGroup>
+
+    Once activated, your terminal prompt should be prefixed with `(venv)`.
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install the required Python packages using pip:
+
+    ```bash
+    python3 -m pip install requests beautifulsoup4 prompt_toolkit
+    ```
+
+    **Required Dependencies:**
+    - **requests** - HTTP library for sending requests to the target
+    - **beautifulsoup4** - HTML parser for extracting CSRF tokens
+    - **prompt_toolkit** - Interactive shell with command history and auto-suggestions
+  </Step>
+
+  <Step title="Verify Installation">
+    Verify that the exploit script is ready to run:
+
+    ```bash
+    python3 CVE-2023-27372.py --help
+    ```
+
+    You should see the help message with usage instructions:
+
+    ```
+    usage: CVE-2023-27372.py [-h] -u URL
+
+    PoC exploit for CVE-2023-27372 - SPIP < 4.2.1 Unauthenticated RCE
+
+    optional arguments:
+      -h, --help         show this help message and exit
+      -u URL, --url URL  Target URL (e.g. http://10.10.10.10/spip)
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  The virtual environment keeps your project dependencies isolated from your system's global Python installation, preventing version conflicts.
+</Note>
+
+## Troubleshooting
+
+### SSL Certificate Warnings
+
+The exploit disables SSL certificate warnings by default (line 20 in `CVE-2023-27372.py`). If you need to enable SSL verification, modify the script accordingly.
+
+### Import Errors
+
+If you encounter import errors, ensure:
+1. The virtual environment is activated
+2. All dependencies are installed in the correct environment
+3. You're using Python 3 (not Python 2)
+
+### Permission Issues
+
+On Linux/macOS, you may need to make the script executable:
+
+```bash
+chmod +x CVE-2023-27372.py
+```
+
+Then you can run it directly:
+
+```bash
+./CVE-2023-27372.py -u http://TARGET/spip
+```
+
+## Next Steps
+
+Once installation is complete, proceed to the [Usage](/usage) guide to learn how to run the exploit against vulnerable SPIP installations.

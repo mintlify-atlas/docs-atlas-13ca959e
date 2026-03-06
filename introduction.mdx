@@ -1,0 +1,117 @@
+---
+title: 'Introduction to CVE-2023-27372'
+description: 'Unauthenticated Remote Code Execution in SPIP < 4.2.1'
+---
+
+# CVE-2023-27372: SPIP Unauthenticated RCE
+
+<Warning>
+  This vulnerability allows **unauthenticated remote code execution** on vulnerable SPIP installations. Code execution occurs with web server privileges (typically `www-data` or `apache`).
+</Warning>
+
+## Overview
+
+CVE-2023-27372 is a critical remote code execution vulnerability affecting SPIP content management systems prior to version 4.2.1. The vulnerability exists in the password reset functionality and can be exploited without authentication.
+
+<Note>
+  **Affected versions:**
+  - SPIP < 3.2.18
+  - SPIP 4.0.x < 4.0.10
+  - SPIP 4.1.x < 4.1.8
+  - SPIP 4.2.x < 4.2.1
+</Note>
+
+## What is SPIP?
+
+SPIP is a free and open-source content management system (CMS) written in PHP, primarily used for publishing websites and collaborative content management. It is particularly popular in French-speaking communities and educational institutions.
+
+## The Vulnerability
+
+The vulnerability stems from **PHP object injection** in the `oubli` parameter of the password reset form (`/spip.php?page=spip_pass`). When a user submits the password reset form, SPIP fails to properly validate and sanitize the `oubli` parameter before deserializing it.
+
+### Attack Vector
+
+An attacker can:
+
+1. Access the password reset page without authentication
+2. Inject a crafted PHP serialized payload into the `oubli` parameter
+3. Execute arbitrary system commands on the server
+4. Retrieve command output directly from the HTTP response
+
+<Info>
+  The vulnerability requires no authentication, no special privileges, and can be exploited remotely over the network.
+</Info>
+
+## Impact and Severity
+
+### CVSS Metrics
+
+- **Severity:** Critical
+- **Attack Vector:** Network
+- **Attack Complexity:** Low
+- **Privileges Required:** None
+- **User Interaction:** None
+- **Impact:** Complete system compromise
+
+### Real-World Impact
+
+Successful exploitation allows an attacker to:
+
+- Execute arbitrary commands as the web server user
+- Read, modify, or delete sensitive files
+- Establish persistent backdoors
+- Pivot to other systems on the network
+- Exfiltrate database credentials and user data
+- Deface websites or inject malicious content
+
+<Warning>
+  This vulnerability has been actively exploited in the wild. Organizations running SPIP should prioritize patching immediately.
+</Warning>
+
+## Discovery and Timeline
+
+The vulnerability was discovered and initially disclosed by security researcher **nuts7** in early 2023. The SPIP development team responded quickly with coordinated security updates across multiple supported versions.
+
+### Patch Timeline
+
+- **2023:** Vulnerability discovered and reported
+- **Fixed in versions:**
+  - SPIP 3.2.18
+  - SPIP 4.0.10
+  - SPIP 4.1.8
+  - SPIP 4.2.1
+
+## Exploitation Difficulty
+
+<Steps>
+  <Step title="Low Complexity">
+    The vulnerability is trivial to exploit. Public proof-of-concept code is widely available.
+  </Step>
+  
+  <Step title="No Authentication Required">
+    Attackers do not need valid credentials or any prior access to the system.
+  </Step>
+  
+  <Step title="Remote Exploitation">
+    The attack can be carried out entirely over HTTP from anywhere on the internet.
+  </Step>
+  
+  <Step title="Reliable Execution">
+    Command output is reliably reflected back in the HTTP response, making exploitation straightforward.
+  </Step>
+</Steps>
+
+## References
+
+- [CVE-2023-27372 on NVD](https://nvd.nist.gov/vuln/detail/CVE-2023-27372)
+- [Original PoC by nuts7](https://github.com/nuts7/CVE-2023-27372)
+- [SPIP Official Security Advisory](https://blog.spip.net/)
+
+## Credits
+
+- **Discovery & Original Exploit:** [nuts7](https://github.com/nuts7)
+- **Enhanced Interactive Shell:** [Esteban Zárate](https://github.com/estebanzarate)
+
+<Note>
+  This documentation is intended for security researchers, penetration testers, and system administrators conducting authorized security assessments. Unauthorized exploitation of this vulnerability is illegal.
+</Note>

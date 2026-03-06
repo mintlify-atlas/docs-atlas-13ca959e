@@ -1,0 +1,98 @@
+---
+title: Affected Versions
+description: SPIP versions vulnerable to CVE-2023-27372 and their patched counterparts
+---
+
+## Vulnerability Overview
+
+CVE-2023-27372 is an unauthenticated remote code execution vulnerability affecting SPIP versions prior to the patches released in March 2023. The vulnerability stems from improper handling of deserialization in the `oubli` parameter of the password reset form.
+
+<Warning>
+  All SPIP installations running versions below the patched releases are vulnerable to unauthenticated remote code execution. Immediate upgrade is strongly recommended.
+</Warning>
+
+## Affected Version Ranges
+
+The following SPIP version branches are affected:
+
+| Branch | Vulnerable Versions | Patched Version | Status |
+|--------|-------------------|-----------------|--------|
+| 3.2.x  | < 3.2.18          | 3.2.18          | <Warning>**Vulnerable**</Warning> |
+| 4.0.x  | < 4.0.10          | 4.0.10          | <Warning>**Vulnerable**</Warning> |
+| 4.1.x  | < 4.1.8           | 4.1.8           | <Warning>**Vulnerable**</Warning> |
+| 4.2.x  | < 4.2.1           | 4.2.1           | <Warning>**Vulnerable**</Warning> |
+
+## Patched Versions
+
+The vulnerability was fixed in the following releases:
+
+<CardGroup cols={2}>
+  <Card title="SPIP 3.2.18" icon="shield-check">
+    Patch for the 3.2.x stable branch
+  </Card>
+  
+  <Card title="SPIP 4.0.10" icon="shield-check">
+    Patch for the 4.0.x stable branch
+  </Card>
+  
+  <Card title="SPIP 4.1.8" icon="shield-check">
+    Patch for the 4.1.x stable branch
+  </Card>
+  
+  <Card title="SPIP 4.2.1" icon="shield-check">
+    Patch for the 4.2.x stable branch
+  </Card>
+</CardGroup>
+
+## Version Check
+
+To determine your SPIP version, check the file `ecrire/inc_version.php` or look at the footer of your SPIP administration panel.
+
+<Info>
+  If you're running any version older than those listed above, your installation is vulnerable and should be upgraded immediately.
+</Info>
+
+## Remediation
+
+### Immediate Actions
+
+1. **Identify your current SPIP version**
+   - Check `ecrire/inc_version.php`
+   - Or view the admin panel footer
+
+2. **Upgrade to a patched version**
+   - 3.2.x users → upgrade to 3.2.18 or later
+   - 4.0.x users → upgrade to 4.0.10 or later
+   - 4.1.x users → upgrade to 4.1.8 or later
+   - 4.2.x users → upgrade to 4.2.1 or later
+
+3. **Verify the upgrade**
+   - Confirm the new version in the admin panel
+   - Test password reset functionality
+
+4. **Monitor for exploitation attempts**
+   - Review web server logs for POST requests to `/spip.php?page=spip_pass`
+   - Look for suspicious serialized data in the `oubli` parameter
+   - Check for unusual process execution by the web server user
+
+<Warning>
+  If you suspect your server has been compromised, perform a full security audit, review all system logs, check for unauthorized user accounts, and consider restoring from a clean backup.
+</Warning>
+
+## Detection
+
+Look for the following indicators in your web server logs:
+
+```
+POST /spip.php?page=spip_pass
+```
+
+With POST data containing serialized PHP payloads in the `oubli` parameter:
+
+```
+oubli=s:XX:"<?php system('...');
+```
+
+<Info>
+  The exploit requires the anti-CSRF token to function, so attackers will typically make a GET request first to retrieve the token, followed by a POST request with the malicious payload.
+</Info>
